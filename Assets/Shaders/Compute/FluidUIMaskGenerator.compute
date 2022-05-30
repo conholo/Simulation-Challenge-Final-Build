@@ -1,0 +1,20 @@
+#pragma kernel TextureMaskGenerator
+
+static int ThreadsPerGroup = 32;
+
+uint _Width;
+uint _Height;
+uint _MaskResolution;
+RWTexture2D<float4> _ResultTexture;
+StructuredBuffer<float3> _HeightColorData;
+
+[numthreads(ThreadsPerGroup, ThreadsPerGroup, 1)]
+void TextureMaskGenerator (uint3 id : SV_DispatchThreadID)
+{
+    const float2 uv = (float2)id.xy / float2(_Width, _Height);
+    const uint index = round(uv.y * _MaskResolution);
+    
+    const float3 color = _HeightColorData[index];
+    const float alpha = dot(color, color) == 0.0 ? 0.0 : 1.0;
+    _ResultTexture[id.xy] = float4(color.xyz, alpha);
+}
